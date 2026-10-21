@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import ForecastTable from './components/ForecastTable.vue'
+import PackingAdvice from './components/PackingAdvice.vue'
 
 const city = ref('')   // reactive variable: when it changes, the page updates
 const weather = ref(null)
@@ -53,6 +54,7 @@ async function searchCity() {
   <p v-else-if="errorMessage">{{ errorMessage }}</p>
   <template v-else-if="weather">
     <h2>{{ placeName }}</h2>
+    <PackingAdvice :days="weather.days" />
     <ForecastTable :days="weather.days" />
     <pre>{{ weather }}</pre>
   </template>
