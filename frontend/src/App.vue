@@ -5,6 +5,7 @@ import SearchBar from './components/SearchBar.vue'
 import PackingAdvice from './components/PackingAdvice.vue'
 import ForecastTable from './components/ForecastTable.vue'
 import AirQualityPanel from './components/AirQualityPanel.vue'
+import BestTimePlanner from './components/BestTimePlanner.vue'
 
 const weather = ref(null)
 const loading = ref(false)
@@ -41,6 +42,7 @@ async function searchCity(city) {
     <PackingAdvice :days="weather.days" />
     <ForecastTable :days="weather.days" />
     <AirQualityPanel :air-quality="weather.airQuality" />
+    <BestTimePlanner :location="weather.location" />
   </template>
   <p v-else>Type the city you are travelling to and press Search.</p>
 </template>
