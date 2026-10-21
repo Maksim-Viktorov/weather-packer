@@ -1,12 +1,43 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const city = ref('')   // reactive variable: when it changes, the page updates
 const weather = ref(null)
+const loading = ref(false)
+const errorMessage = ref('')
+
+// "Dublin, IE" or "Dublin, Ohio, US", so the user can see which place was found
+const placeName = computed(() => {
+  const { name, state, country } = weather.value.location
+  return [name, state, country].filter(Boolean).join(', ')
+})
+
+// When Express is not running, Vite answers 502 with an empty body,
+// so the body cannot be trusted to be JSON
+async function readJson(response) {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
 
 async function searchCity() {
-  const response = await fetch(`/api/weather?city=${encodeURIComponent(city.value)}`)
-  weather.value = await response.json()
+  loading.value = true
+  errorMessage.value = ''
+  weather.value = null
+  try {
+    const response = await fetch(`/api/weather?city=${encodeURIComponent(city.value.trim())}`)
+    const data = await readJson(response)
+    if (!response.ok) {
+      throw new Error(data?.error ?? `The server did not answer properly (HTTP ${response.status}). Please try again in a moment.`)
+    }
+    weather.value = data
+  } catch (error) {
+    errorMessage.value = error.message
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -14,7 +45,14 @@ async function searchCity() {
   <h1>Weather Packer</h1>
   <form @submit.prevent="searchCity">
     <input v-model="city" placeholder="Where are you going?" />
-    <button type="submit">Search</button>
+    <button type="submit" :disabled="loading">Search</button>
   </form>
-  <pre v-if="weather">{{ weather }}</pre>
+
+  <p v-if="loading">Loading the forecast...</p>
+  <p v-else-if="errorMessage">{{ errorMessage }}</p>
+  <template v-else-if="weather">
+    <h2>{{ placeName }}</h2>
+    <pre>{{ weather }}</pre>
+  </template>
+  <p v-else>Type the city you are travelling to and press Search.</p>
 </template>
