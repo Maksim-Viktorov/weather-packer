@@ -11,10 +11,11 @@ const weather = ref(null)
 const loading = ref(false)
 const errorMessage = ref('')
 
-// "Dublin, IE" or "Dublin, Ohio, US", so the user can see which place was found
+// "Dublin, IE" or "Dublin, Ohio, US", so the user can see which place was found.
+// A state with the city's own name (Delhi, Delhi) is left out.
 const placeName = computed(() => {
   const { name, state, country } = weather.value.location
-  return [name, state, country].filter(Boolean).join(', ')
+  return [name, state === name ? null : state, country].filter(Boolean).join(', ')
 })
 
 async function searchCity(city) {
