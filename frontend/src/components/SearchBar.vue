@@ -70,4 +70,11 @@ button {
 button:not(:disabled):hover {
   background: #fcd34d;
 }
+
+/* Half-transparent amber turns muddy over the blue hero, so disabled gets its own colours */
+button:disabled {
+  opacity: 1;
+  color: #44557a;
+  background: #c3d2f0;
+}
 </style>
