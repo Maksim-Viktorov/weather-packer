@@ -65,17 +65,17 @@ function explain(slot) {
 </script>
 
 <template>
-  <section>
+  <section class="card">
     <h3>Best Time Outside</h3>
-    <p>
+    <p class="intro">
       Pick an activity to see the best times for it during your trip.
       Each 3-hour slot gets a score from 0 to 100 from the weather forecast and the hourly air pollution forecast.
     </p>
 
-    <p v-if="loading">Finding the best times...</p>
-    <p v-else-if="errorMessage" role="alert">{{ errorMessage }}</p>
+    <p v-if="loading" role="status"><span class="spinner" aria-hidden="true"></span>Finding the best times...</p>
+    <p v-else-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
     <template v-else-if="activity">
-      <div role="group" aria-label="Activity">
+      <div class="activities" role="group" aria-label="Activity">
         <button
           v-for="option in plan.activities"
           :key="option.id"
@@ -89,39 +89,217 @@ function explain(slot) {
       </div>
 
       <h4>Best times for {{ activity.label }}</h4>
-      <p v-if="bestSlots[0].score < POOR_SCORE_BELOW">
+      <p v-if="bestSlots[0].score < POOR_SCORE_BELOW" class="poor">
         No time in the next 3 days scores {{ POOR_SCORE_BELOW }} or more, so these are the least bad.
       </p>
-      <ol>
+      <ol class="best">
         <li v-for="slot in bestSlots" :key="slot.dt">
-          <img :src="iconUrl(slot.icon)" :alt="slot.description" width="40" height="40" />
-          <strong>{{ formatDate(slot.date) }}, {{ slot.time }}</strong>
-          scores {{ slot.score }}: {{ explain(slot) }}
+          <span class="score" :style="{ backgroundColor: scoreColour(slot.score) }">
+            <span class="visually-hidden">Score </span>{{ slot.score }}
+          </span>
+          <img class="weather-icon" :src="iconUrl(slot.icon)" :alt="slot.description" width="40" height="40" />
+          <span class="when">
+            <strong>{{ formatDate(slot.date) }}, {{ slot.time }}</strong>
+            <span class="why">{{ explain(slot) }}</span>
+          </span>
         </li>
       </ol>
 
-      <table>
-        <caption>Score for every 3-hour slot, in local time</caption>
-        <thead>
-          <tr>
-            <th scope="col">Day</th>
-            <th v-for="time in slotTimes" :key="time" scope="col">{{ time }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="day in timelineDays" :key="day.date">
-            <th scope="row">{{ formatDate(day.date) }}</th>
-            <td
-              v-for="slot in day.slots"
-              :key="slot.dt"
-              :style="{ backgroundColor: scoreColour(slot.score) }"
-              :title="`${slot.time}: ${explain(slot)}`"
-            >
-              {{ slot.score }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      <h4>All slots</h4>
+      <div class="timeline-wrap">
+        <table class="timeline">
+          <caption>Score for every 3-hour slot, in local time. Hover over a slot to see why it lost points.</caption>
+          <thead>
+            <tr>
+              <th scope="col">Day</th>
+              <th v-for="time in slotTimes" :key="time" scope="col">{{ time }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="day in timelineDays" :key="day.date">
+              <th scope="row">{{ formatDate(day.date) }}</th>
+              <td
+                v-for="slot in day.slots"
+                :key="slot.dt"
+                :style="{ backgroundColor: scoreColour(slot.score) }"
+                :title="`${slot.time}: ${explain(slot)}`"
+              >
+                {{ slot.score }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span>0 poor</span>
+        <span class="scale"></span>
+        <span>100 ideal</span>
+      </div>
     </template>
   </section>
 </template>
+
+<style scoped>
+.intro {
+  color: var(--muted);
+}
+
+.error {
+  color: #9a3412;
+}
+
+.activities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 4px;
+}
+
+.activities button {
+  padding: 8px 18px;
+  font-weight: 600;
+  color: var(--accent);
+  background: #ffffff;
+  border: 2px solid var(--accent);
+  border-radius: 999px;
+}
+
+.activities button:hover {
+  background: var(--accent-soft);
+}
+
+.activities button.active {
+  color: #ffffff;
+  background: var(--accent);
+}
+
+.poor {
+  padding: 10px 14px;
+  color: #9a3412;
+  background: #fff4ea;
+  border-radius: 10px;
+}
+
+.best {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.best li {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f6f8fb;
+  border-radius: 10px;
+}
+
+.score {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--ink);
+  border-radius: 50%;
+}
+
+.best img {
+  flex: none;
+}
+
+.when {
+  display: flex;
+  flex-direction: column;
+}
+
+.why {
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.timeline-wrap {
+  overflow-x: auto;
+}
+
+.timeline {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 3px;
+}
+
+.timeline caption {
+  caption-side: bottom;
+  padding-top: 6px;
+  font-size: 0.8rem;
+  text-align: left;
+  color: var(--muted);
+}
+
+.timeline th {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.timeline thead th:first-child {
+  width: 88px;
+  text-align: left;
+}
+
+.timeline tbody th {
+  text-align: left;
+  font-size: 0.8rem;
+  color: var(--ink);
+}
+
+.timeline td {
+  padding: 9px 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  border-radius: 6px;
+}
+
+.legend {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.scale {
+  width: 140px;
+  height: 10px;
+  background: linear-gradient(to right, hsl(0, 70%, 78%), hsl(60, 70%, 78%), hsl(120, 70%, 78%));
+  border-radius: 999px;
+}
+
+@media (max-width: 520px) {
+  .timeline {
+    border-spacing: 2px;
+  }
+
+  .timeline thead th:first-child {
+    width: 46px;
+  }
+
+  .timeline th {
+    font-size: 0.62rem;
+  }
+
+  .timeline td {
+    padding: 7px 0;
+    font-size: 0.75rem;
+  }
+}
+</style>
