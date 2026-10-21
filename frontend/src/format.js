@@ -21,3 +21,7 @@ export function formatWind(metresPerSecond) {
 export function formatRain(mm) {
   return `${mm.toFixed(1)} mm`
 }
+
+export function formatConcentration(microgramsPerCubicMetre) {
+  return `${microgramsPerCubicMetre.toFixed(1)} µg/m³`
+}
