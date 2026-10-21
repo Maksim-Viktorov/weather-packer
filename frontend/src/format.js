@@ -25,3 +25,8 @@ export function formatRain(mm) {
 export function formatConcentration(microgramsPerCubicMetre) {
   return `${microgramsPerCubicMetre.toFixed(1)} µg/m³`
 }
+
+// OpenWeatherMap's own icon images, so the app needs no icon library
+export function iconUrl(icon) {
+  return `https://openweathermap.org/img/wn/${icon}@2x.png`
+}

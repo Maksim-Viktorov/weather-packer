@@ -33,16 +33,17 @@ test('rain levels use rate classes in mm per hour', () => {
   assert.equal(rainLevel(7.7), 'Heavy')
 })
 
-test('a day summary takes its rain level from the heaviest slot', () => {
+test('a day summary takes its rain level from the heaviest slot and its icon from midday', () => {
   const day = {
     date: '2026-10-22',
     slots: [
-      { temp: 6, windSpeed: 3, rainMm: 0 },
-      { temp: 11, windSpeed: 7.5, rainMm: 9 },   // 3 mm per hour: Moderate
-      { temp: 9, windSpeed: 5, rainMm: 1.5 },
+      { time: '08:30', temp: 6, windSpeed: 3, rainMm: 0, icon: '01d', description: 'clear sky' },
+      { time: '11:30', temp: 11, windSpeed: 7.5, rainMm: 9, icon: '10d', description: 'moderate rain' },   // 3 mm per hour
+      { time: '14:30', temp: 9, windSpeed: 5, rainMm: 1.5, icon: '10d', description: 'light rain' },
     ],
   }
   assert.deepEqual(summariseDay(day), {
     date: '2026-10-22', minTemp: 6, maxTemp: 11, maxWind: 7.5, totalRainMm: 10.5, rainLevel: 'Moderate',
+    icon: '10d', description: 'moderate rain',
   })
 })

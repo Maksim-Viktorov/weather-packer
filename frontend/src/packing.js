@@ -10,6 +10,8 @@ const LIGHT_RAIN_BELOW = 2.5
 const HEAVY_RAIN_ABOVE = 7.6
 const HOURS_PER_SLOT = 3   // each forecast slot holds the rain of 3 hours
 
+const MIDDAY_MINUTES = 12 * 60
+
 export function classifyTemperature(celsius) {
   if (celsius < COLD_BELOW) return 'Cold'
   if (celsius <= HOT_ABOVE) return 'Mild'
@@ -23,10 +25,20 @@ export function rainLevel(mmPerHour) {
   return 'Heavy'
 }
 
+// The slot closest to 12:00 local time, whose icon stands for the whole day
+function middaySlot(slots) {
+  const distanceFromMidday = (slot) => {
+    const [hours, minutes] = slot.time.split(':').map(Number)
+    return Math.abs(hours * 60 + minutes - MIDDAY_MINUTES)
+  }
+  return slots.reduce((closest, slot) => (distanceFromMidday(slot) < distanceFromMidday(closest) ? slot : closest))
+}
+
 // One table row; a day's rain level is the level of its heaviest slot
 export function summariseDay(day) {
   const temps = day.slots.map((slot) => slot.temp)
   const heaviestRainMm = Math.max(...day.slots.map((slot) => slot.rainMm))
+  const midday = middaySlot(day.slots)
   return {
     date: day.date,
     minTemp: Math.min(...temps),
@@ -34,6 +46,8 @@ export function summariseDay(day) {
     maxWind: Math.max(...day.slots.map((slot) => slot.windSpeed)),
     totalRainMm: day.slots.reduce((total, slot) => total + slot.rainMm, 0),
     rainLevel: rainLevel(heaviestRainMm / HOURS_PER_SLOT),
+    icon: midday.icon,
+    description: midday.description,
   }
 }
 

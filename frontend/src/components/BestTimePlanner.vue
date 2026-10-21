@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { getJson } from '../api.js'
-import { formatDate } from '../format.js'
+import { formatDate, iconUrl } from '../format.js'
 
 const props = defineProps({
   location: { type: Object, required: true },   // the place /api/weather found, with lat and lon
@@ -94,6 +94,7 @@ function explain(slot) {
       </p>
       <ol>
         <li v-for="slot in bestSlots" :key="slot.dt">
+          <img :src="iconUrl(slot.icon)" :alt="slot.description" width="40" height="40" />
           <strong>{{ formatDate(slot.date) }}, {{ slot.time }}</strong>
           scores {{ slot.score }}: {{ explain(slot) }}
         </li>
