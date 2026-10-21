@@ -44,3 +44,11 @@ export async function getForecast(lat, lon) {
         units: 'metric'
     });
 }
+
+// Current pollutant levels; always in µg/m³, so no units parameter
+export async function getAirPollution(lat, lon) {
+    return await fetchJson('/data/2.5/air_pollution', {
+        lat: String(lat),
+        lon: String(lon)
+    });
+}

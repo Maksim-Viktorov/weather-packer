@@ -1,6 +1,7 @@
 import express from 'express';
-import { findCity, getForecast, UpstreamError } from './openWeather.js';
+import { findCity, getAirPollution, getForecast, UpstreamError } from './openWeather.js';
 import { selectNextThreeDays } from './forecast.js';
+import { describeAirQuality } from './airQuality.js';
 
 const app = express();
 
@@ -27,7 +28,24 @@ app.get('/api/weather', async (req, res) => {
     return res.status(404).json({ error: 'City not found.' });
   }
 
-  const forecast = await getForecast(place.lat, place.lon);
+  // Both requests only need the coordinates, so they run in parallel.
+  // allSettled instead of all: if only the air pollution request fails, the user still gets the forecast.
+  const [forecastResult, airPollutionResult] = await Promise.allSettled([
+    getForecast(place.lat, place.lon),
+    getAirPollution(place.lat, place.lon)
+  ]);
+
+  if (forecastResult.status === 'rejected') {
+    throw forecastResult.reason;
+  }
+  const forecast = forecastResult.value;
+
+  let airQuality = null;
+  if (airPollutionResult.status === 'fulfilled') {
+    airQuality = describeAirQuality(airPollutionResult.value);
+  } else {
+    console.error(airPollutionResult.reason.message);
+  }
 
   return res.json({
     location: {
@@ -38,7 +56,8 @@ app.get('/api/weather', async (req, res) => {
       lon: place.lon,
       timezoneOffset: forecast.city.timezone
     },
-    days: selectNextThreeDays(forecast)
+    days: selectNextThreeDays(forecast),
+    airQuality
   });
   
 });
