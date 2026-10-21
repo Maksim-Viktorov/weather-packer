@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import ForecastTable from './components/ForecastTable.vue'
 
 const city = ref('')   // reactive variable: when it changes, the page updates
 const weather = ref(null)
@@ -52,6 +53,7 @@ async function searchCity() {
   <p v-else-if="errorMessage">{{ errorMessage }}</p>
   <template v-else-if="weather">
     <h2>{{ placeName }}</h2>
+    <ForecastTable :days="weather.days" />
     <pre>{{ weather }}</pre>
   </template>
   <p v-else>Type the city you are travelling to and press Search.</p>
