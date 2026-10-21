@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { getJson } from './api.js'
 import SearchBar from './components/SearchBar.vue'
 import PackingAdvice from './components/PackingAdvice.vue'
 import ForecastTable from './components/ForecastTable.vue'
@@ -15,27 +16,12 @@ const placeName = computed(() => {
   return [name, state, country].filter(Boolean).join(', ')
 })
 
-// When Express is not running, Vite answers 502 with an empty body,
-// so the body cannot be trusted to be JSON
-async function readJson(response) {
-  try {
-    return await response.json()
-  } catch {
-    return null
-  }
-}
-
 async function searchCity(city) {
   loading.value = true
   errorMessage.value = ''
   weather.value = null
   try {
-    const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`)
-    const data = await readJson(response)
-    if (!response.ok) {
-      throw new Error(data?.error ?? `The server did not answer properly (HTTP ${response.status}). Please try again in a moment.`)
-    }
-    weather.value = data
+    weather.value = await getJson(`/api/weather?city=${encodeURIComponent(city)}`)
   } catch (error) {
     errorMessage.value = error.message
   } finally {
