@@ -8,5 +8,5 @@ test('dates keep the destination day', () => {
 })
 
 test('wind is shown in whole km/h', () => {
-  assert.equal(formatWind(4.27), '15 km/h')
+  assert.equal(formatWind(4.27), '15 km/h')
 })
