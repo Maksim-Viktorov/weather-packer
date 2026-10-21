@@ -26,7 +26,7 @@ app.get('/api/weather', async (req, res) => {
   const place = await findCity(city);
 
   if (!place) {
-    return res.status(404).json({ error: 'City not found.' });
+    return res.status(404).json({ error: 'We could not find that city. Check the spelling or try a nearby city.' });
   }
 
   // Both requests only need the coordinates, so they run in parallel.
