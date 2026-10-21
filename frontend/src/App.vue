@@ -1,9 +1,9 @@
 <script setup>
 import { computed, ref } from 'vue'
-import ForecastTable from './components/ForecastTable.vue'
+import SearchBar from './components/SearchBar.vue'
 import PackingAdvice from './components/PackingAdvice.vue'
+import ForecastTable from './components/ForecastTable.vue'
 
-const city = ref('')   // reactive variable: when it changes, the page updates
 const weather = ref(null)
 const loading = ref(false)
 const errorMessage = ref('')
@@ -24,12 +24,12 @@ async function readJson(response) {
   }
 }
 
-async function searchCity() {
+async function searchCity(city) {
   loading.value = true
   errorMessage.value = ''
   weather.value = null
   try {
-    const response = await fetch(`/api/weather?city=${encodeURIComponent(city.value.trim())}`)
+    const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`)
     const data = await readJson(response)
     if (!response.ok) {
       throw new Error(data?.error ?? `The server did not answer properly (HTTP ${response.status}). Please try again in a moment.`)
@@ -45,18 +45,14 @@ async function searchCity() {
 
 <template>
   <h1>Weather Packer</h1>
-  <form @submit.prevent="searchCity">
-    <input v-model="city" placeholder="Where are you going?" />
-    <button type="submit" :disabled="loading">Search</button>
-  </form>
+  <SearchBar :loading="loading" @search="searchCity" />
 
   <p v-if="loading">Loading the forecast...</p>
-  <p v-else-if="errorMessage">{{ errorMessage }}</p>
+  <p v-else-if="errorMessage" role="alert">{{ errorMessage }}</p>
   <template v-else-if="weather">
     <h2>{{ placeName }}</h2>
     <PackingAdvice :days="weather.days" />
     <ForecastTable :days="weather.days" />
-    <pre>{{ weather }}</pre>
   </template>
   <p v-else>Type the city you are travelling to and press Search.</p>
 </template>
