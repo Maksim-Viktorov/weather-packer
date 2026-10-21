@@ -1,7 +1,8 @@
 import express from 'express';
-import { findCity, getAirPollution, getForecast, UpstreamError } from './openWeather.js';
+import { findCity, getAirPollution, getAirPollutionForecast, getForecast, UpstreamError } from './openWeather.js';
 import { selectNextThreeDays } from './forecast.js';
 import { describeAirQuality } from './airQuality.js';
+import { planBestTimes } from './bestTimes.js';
 
 const app = express();
 
@@ -60,6 +61,34 @@ app.get('/api/weather', async (req, res) => {
     airQuality
   });
   
+});
+
+// A latitude or longitude from the query string, or null if it is missing or out of range.
+// Number('') is 0, so an empty parameter is rejected before converting it.
+function parseCoordinate(text, limit) {
+  if (typeof text !== 'string' || text.trim() === '') {
+    return null;
+  }
+  const value = Number(text);
+  return Number.isFinite(value) && Math.abs(value) <= limit ? value : null;
+}
+
+// Takes coordinates instead of a city name, so it always plans for the place /api/weather already found
+app.get('/api/best-times', async (req, res) => {
+  const lat = parseCoordinate(req.query.lat, 90);
+  const lon = parseCoordinate(req.query.lon, 180);
+
+  if (lat === null || lon === null) {
+    return res.status(400).json({ error: 'Please give a latitude from -90 to 90 and a longitude from -180 to 180.' });
+  }
+
+  // Both datasets feed every score, so if either request fails the plan fails (502)
+  const [forecast, pollutionForecast] = await Promise.all([
+    getForecast(lat, lon),
+    getAirPollutionForecast(lat, lon)
+  ]);
+
+  return res.json(planBestTimes(forecast, pollutionForecast));
 });
 
 app.use((err, req, res, next) => {

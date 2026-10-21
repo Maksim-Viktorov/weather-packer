@@ -52,3 +52,11 @@ export async function getAirPollution(lat, lon) {
         lon: String(lon)
     });
 }
+
+// Hourly pollution forecast for the next 96 hours, starting at the current hour
+export async function getAirPollutionForecast(lat, lon) {
+    return await fetchJson('/data/2.5/air_pollution/forecast', {
+        lat: String(lat),
+        lon: String(lon)
+    });
+}
